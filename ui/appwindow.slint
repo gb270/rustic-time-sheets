@@ -1,0 +1,131 @@
+import { VerticalBox, GridBox, Button, ComboBox, TabWidget, LineEdit } from "std-widgets.slint";
+
+component HomeScreen {
+    in-out property <string> task_name;
+    in-out property <string> project_name;
+    in-out property <string> price_code;
+    in-out property <bool> task_running;
+    
+    callback task_name_changed();
+    callback project_name_changed();
+    callback price_code_changed();
+    callback task_running_changed();
+
+    VerticalLayout {
+        spacing: 15px;
+        HorizontalLayout {
+            alignment: center;
+            Text { text: "Time sheet app"; }
+        }
+        HorizontalLayout {
+            Text { text: "Project name:"; }
+            ComboBox {
+                y: 0px;
+                width: 200px;
+                height: 50px;
+                model: ["Project 1", "Project 2", "Project 3"];
+                selected => {
+                    root.project_name = self.current-value;
+                    root.project_name_changed();
+                }
+            }
+        }
+        HorizontalLayout {
+            Text { text: "Task name:"; }
+            LineEdit {
+                font-size: 14px;
+                placeholder-text: "Enter task name here";
+                accepted => {
+                    root.task_name = self.text;
+                    root.task_name_changed();
+                }
+            }
+
+        }
+        HorizontalLayout {
+            Text { text: "Price code:"; }
+            ComboBox {
+                y: 0px;
+                width: 200px;
+                height: 50px;
+                model: ["Price code 1", "Price code 2", "Price code 3"];
+                selected => {
+                    root.price_code = self.current-value;
+                    root.price_code_changed();
+                }
+            }
+        }
+        HorizontalLayout {
+            Button { 
+                text: {
+                    if root.task_running {
+                        "Stop Task"
+                    } else {
+                        "Start Task"
+                    }
+                }
+                clicked => { 
+                    root.task_running = !root.task_running;
+                    root.task_running_changed();
+                }
+            }
+        }
+    }    
+}
+
+component HistoryScreen {
+    Text { text: "placeholder for history screen";} 
+}
+
+component SettingsScreen {
+    Text { text: "placeholder for settings screen";} 
+}
+
+
+
+export component AppWindow inherits Window {
+    width: 326px;
+    height: 520px;
+
+    in-out property <string> task_name;
+    in-out property <string> project_name;
+    in-out property <string> price_code;
+    in-out property <bool> task_running;
+
+    callback parent_task_name_changed();
+    callback parent_project_name_changed();
+    callback parent_price_code_changed();
+    callback parent_task_running_changed();
+
+    TabWidget {
+        Tab { 
+            title: "Home";
+            HomeScreen { 
+                task_name_changed => {
+                    root.task_name = self.task_name;
+                    parent_task_name_changed();
+                }
+                project_name_changed => {
+                    root.project_name = self.project_name;
+                    parent_project_name_changed();
+                }
+                price_code_changed => {
+                    root.price_code = self.price_code;
+                    parent_price_code_changed();
+                }
+                task_running_changed => {
+                    root.task_running = self.task_running;
+                    parent_task_running_changed();
+                }
+            }
+        }
+        Tab { 
+            title: "History";
+            HistoryScreen { } 
+        }
+        Tab { 
+            title: "Settings";
+            SettingsScreen { } 
+        }
+    }
+}
