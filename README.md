@@ -33,6 +33,7 @@ For development, we recommend using an IDE with support for Slint files. You can
 - [ ] Implement GUI-based custom price codes.
 - [ ] Allow simultaneous task execution.
 - [ ] Introduce persistence to retain data across sessions and avoid constant CSV regeneration.
+- [ ] Add time-zone support.
 
 ## Contributing
 

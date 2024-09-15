@@ -87,10 +87,12 @@ export component AppWindow inherits Window {
     width: 326px;
     height: 520px;
 
-    in-out property <string> task_name;
-    in-out property <string> project_name;
-    in-out property <string> price_code;
-    in-out property <bool> task_running;
+    title: "Rustic Time Sheets";
+
+    in-out property <string> task_name: "";
+    in-out property <string> project_name: "Project 1";
+    in-out property <string> price_code: "Price code 1";
+    in-out property <bool> task_running: false;
 
     callback parent_task_name_changed();
     callback parent_project_name_changed();

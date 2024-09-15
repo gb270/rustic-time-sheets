@@ -3,12 +3,11 @@
 
 use std::error::Error;
 use std::fs::File;
-use std::io::Write;
-use std::time::{Instant, Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Instant, Duration, SystemTime};
 use std::cell::RefCell;
 use std::rc::Rc;
 use csv::Writer;
-use chrono::{DateTime, Utc, TimeZone};
+use chrono::{DateTime, Utc};
 use slint::SharedString;
 
 slint::include_modules!();
@@ -17,6 +16,12 @@ slint::include_modules!();
 // TODO: add functionality to enable custom project names
 // TODO: add functionality to enable custom price codes
 // TODO: might need to add functionality to run multiple tasks at once?
+// TODO: implement history tab so that past activities can be viewed from the app
+// (can maybe reuse the timesheet.csv then as a dependency? i.e. that is the file that we read
+// from for persistence?)
+// TODO: implement time zones, at the moment all recorded times just remain in UTC
+
+// Note: at some point clean up the println!s and prep a release
 
 // TODO: change the price codes so that this can all be edited in the app
 fn calculate_task_cost(price_code: &str, duration: f64) -> f64 {
