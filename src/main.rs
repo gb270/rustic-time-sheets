@@ -13,17 +13,6 @@ use slint::SharedString;
 slint::include_modules!();
 
 
-// TODO: add functionality to enable custom project names
-// TODO: add functionality to enable custom price codes
-// TODO: might need to add functionality to run multiple tasks at once?
-// TODO: implement history tab so that past activities can be viewed from the app
-// (can maybe reuse the timesheet.csv then as a dependency? i.e. that is the file that we read
-// from for persistence?)
-// TODO: implement time zones, at the moment all recorded times just remain in UTC
-
-// Note: at some point clean up the println!s and prep a release
-
-// TODO: change the price codes so that this can all be edited in the app
 fn calculate_task_cost(price_code: &str, duration: f64) -> f64 {
     let hourly_rate = match price_code {
         "Price code 1" => 50.0,
@@ -54,7 +43,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Rc<Refcell> is used because it's mutable and needs to be used across closures
     let start_time: Rc<RefCell<Option<Instant>>> = Rc::new(RefCell::new(None));
     
-    // TODO: change this so we add to existing file if it exists
     let file = File::create("timesheet.csv")?;
     let mut wtr = Writer::from_writer(file);
 
@@ -94,8 +82,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
 
-                    // TODO: fix this, if only default values are used and value isn't actually
-                    // selected then nothing will be returned for task, and price code
                     wtr.write_record(&[
                         &ui.get_task_name(),
                         &ui.get_project_name(),
