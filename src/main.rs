@@ -34,6 +34,46 @@ fn format_datetime(datetime: DateTime<Utc>) -> SharedString {
 }
 
 
+fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>) -> Result<(), Box<dyn Error>> {
+    println!("initialized!");
+    let popup = CustomProjectNameDialog::new()?;
+    let popup_weak = popup.as_weak();
+    
+    {
+        let popup_weak_clone = popup_weak.clone();
+        let ui_weak_clone = ui_weak.clone();
+        
+        popup.on_confirm_close_dialog(move || {
+            if let (Some(popup), Some(ui)) = (popup_weak_clone.upgrade(), ui_weak_clone.upgrade()) {
+                let new_custom_project_name = popup.get_new_custom_project_name();
+                println!("New project name is {}", new_custom_project_name);
+                println!("Project name saved");
+                
+
+                println!("current model is {:?}", ui.get_parent_project_names_model());
+                
+                // TODO: implement adding to model
+
+                popup.window().hide().unwrap();
+            }
+        });
+    }
+    
+    {
+        let popup_weak_clone = popup_weak.clone();
+        popup.on_cancel_close_dialog(move || {
+            if let Some(popup) = popup_weak_clone.upgrade() {
+                println!("Dialog change cancelled");
+                popup.window().hide().unwrap();
+            }
+        });
+    }
+    
+    popup.run()?;
+    Ok(())
+}
+
+
 fn main() -> Result<(), Box<dyn Error>> {
     let ui = AppWindow::new().unwrap();
 
@@ -98,7 +138,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 *start_time_clone.borrow_mut() = None;
             }
         });
+
+        ui.on_parent_initialise_custom_project_name_popup(move || {
+            let _ = custom_project_name_dialog(ui_weak.clone());
+        });
     }
+
 
     ui.run().unwrap();
     Ok(())

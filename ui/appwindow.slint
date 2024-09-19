@@ -1,15 +1,58 @@
-import { VerticalBox, GridBox, Button, ComboBox, TabWidget, LineEdit } from "std-widgets.slint";
+import { VerticalBox, GridBox, Button, ComboBox, TabWidget, LineEdit, StandardButton } from "std-widgets.slint";
+
+
+export component CustomProjectNameDialog inherits Dialog {
+    in-out property <string> new_custom_project_name;
+    
+    callback confirm_close_dialog();
+    callback cancel_close_dialog();
+    
+    title: "Enter new custom project name";
+    Text {
+        text: "Custom Project name";
+        }
+        StandardButton { 
+            kind: ok; 
+            clicked => {
+                confirm_close_dialog();
+            }
+        }
+        StandardButton { 
+            kind: cancel;
+            clicked => {
+                cancel_close_dialog();
+            }
+        }
+        LineEdit {
+            placeholder-text: "Enter new project name here";
+            dialog-button-role: action;
+            accepted => {
+                root.new_custom_project_name = self.text;    
+            }
+            
+        }
+        
+
+}
+
+
 
 component HomeScreen {
     in-out property <string> task_name;
     in-out property <string> project_name;
     in-out property <string> price_code;
     in-out property <bool> task_running;
+
+    in-out property <[string]> project_names_model: ["Project 1", "Project 2", "Project 3"];
+    in-out property <[string]> price_codes_model: ["Price code 1", "Price code 2", "Price code 3"];
     
     callback task_name_changed();
     callback project_name_changed();
     callback price_code_changed();
     callback task_running_changed();
+
+    callback initialise_custom_project_name_popup();
+    callback new_custom_name_added();
 
     VerticalLayout {
         spacing: 15px;
@@ -23,10 +66,19 @@ component HomeScreen {
                 y: 0px;
                 width: 200px;
                 height: 50px;
-                model: ["Project 1", "Project 2", "Project 3"];
+                model: project_names_model;
                 selected => {
                     root.project_name = self.current-value;
                     root.project_name_changed();
+                }
+            }
+            // add custom project
+            
+            Button {
+                text: "+";
+                clicked => {
+                    root.initialise_custom_project_name_popup();
+                    new_custom_name_added();
                 }
             }
         }
@@ -48,7 +100,7 @@ component HomeScreen {
                 y: 0px;
                 width: 200px;
                 height: 50px;
-                model: ["Price code 1", "Price code 2", "Price code 3"];
+                model: price_codes_model;
                 selected => {
                     root.price_code = self.current-value;
                     root.price_code_changed();
@@ -73,18 +125,22 @@ component HomeScreen {
     }    
 }
 
+
+
+
 component HistoryScreen {
     Text { text: "placeholder for history screen";} 
 }
 
 component SettingsScreen {
     Text { text: "placeholder for settings screen";} 
+   
 }
 
 
 
 export component AppWindow inherits Window {
-    width: 326px;
+    width: 480px;
     height: 520px;
 
     title: "Rustic Time Sheets";
@@ -94,15 +150,20 @@ export component AppWindow inherits Window {
     in-out property <string> price_code: "Price code 1";
     in-out property <bool> task_running: false;
 
+    in-out property <[string]> parent_project_names_model: ["Project 1", "Project 2", "Project 3"];
+    in-out property <[string]> parent_price_codes_model: ["Price code 1", "Price code 2", "Price code 3"];
+
     callback parent_task_name_changed();
     callback parent_project_name_changed();
     callback parent_price_code_changed();
     callback parent_task_running_changed();
 
+    callback parent_initialise_custom_project_name_popup();
+
     TabWidget {
         Tab { 
             title: "Home";
-            HomeScreen { 
+            HomeScreen {
                 task_name_changed => {
                     root.task_name = self.task_name;
                     parent_task_name_changed();
@@ -119,6 +180,14 @@ export component AppWindow inherits Window {
                     root.task_running = self.task_running;
                     parent_task_running_changed();
                 }
+                initialise_custom_project_name_popup => {
+                    parent_initialise_custom_project_name_popup();
+                }
+                new_custom_name_added => {
+                    self.project_names_model = root.parent_project_names_model;
+                    self.price_codes_model = root.parent_price_codes_model;
+                }
+
             }
         }
         Tab { 
@@ -128,6 +197,7 @@ export component AppWindow inherits Window {
         Tab { 
             title: "Settings";
             SettingsScreen { } 
+
         }
     }
 }
