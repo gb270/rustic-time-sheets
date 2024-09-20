@@ -35,33 +35,57 @@ fn format_datetime(datetime: DateTime<Utc>) -> SharedString {
 }
 
 
-fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>, parent_project_names_model : Rc<VecModel<SharedString>> ) -> Result<(), Box<dyn Error>> {
+fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>, 
+    parent_project_names_model : Rc<VecModel<SharedString>>,
+    open_window_count: Rc<RefCell<usize>>,
+
+) -> Result<(), Box<dyn Error>> {
     let popup = CustomProjectNameDialog::new()?;
     let popup_weak = popup.as_weak();
+
+    *open_window_count.borrow_mut() += 1;
 
     {
         let popup_weak_clone = popup_weak.clone();
         let ui_weak_clone = ui_weak.clone();
+        let open_window_count_clone = open_window_count.clone();
 
+        // dialog ok button pressed
         popup.on_confirm_close_dialog(move || {
             if let (Some(popup), Some(ui)) = (popup_weak_clone.upgrade(), ui_weak_clone.upgrade()) {
                 let new_custom_project_name = popup.get_new_custom_project_name();
                 parent_project_names_model.push(new_custom_project_name.into());
 
                 popup.window().hide().unwrap();
+
+                // window closed byitself so we decrement open window counter
+                *open_window_count_clone.borrow_mut() -= 1;
             }
         });
     }
 
     {
         let popup_weak_clone = popup_weak.clone();
+        let open_window_count_clone = open_window_count.clone();
+        // dialog cancel button pressed
         popup.on_cancel_close_dialog(move || {
             if let Some(popup) = popup_weak_clone.upgrade() {
-                println!("Dialog change cancelled");
                 popup.window().hide().unwrap();
+
+                *open_window_count_clone.borrow_mut() -= 1;
             }
         });
     }
+
+    {
+        let open_window_count_clone = open_window_count.clone();
+        popup.window().on_close_requested(move || {
+            *open_window_count_clone.borrow_mut() -= 1;
+            slint::CloseRequestResponse::HideWindow
+            
+        });
+    }
+
 
     popup.run()?;
     Ok(())
@@ -139,18 +163,34 @@ fn main() -> Result<(), Box<dyn Error>> {
     Rc::new(VecModel::from(vec!["Project 1".into(), "Project 2".into(), "Project 3".into()]));
     let parent_project_names_model_rc = ModelRc::from(parent_project_names_model.clone());
     ui.set_parent_project_names_model(parent_project_names_model_rc);
+    
+    let open_window_count: Rc<RefCell<usize>> = Rc::new(RefCell::new(0));
+    
     {
         let ui_weak_clone = ui_weak.clone();
+        let open_window_count_clone = open_window_count.clone();
 
         ui.on_parent_initialise_custom_project_name_popup(move || {
             let parent_project_names_model_clone = parent_project_names_model.clone();
-            let _ = custom_project_name_dialog(ui_weak_clone.clone(), parent_project_names_model_clone);
-            // parent_project_names_model.push("Somevalue".into());
+            let _ = custom_project_name_dialog(ui_weak_clone.clone(), parent_project_names_model_clone, open_window_count_clone.clone());
+            
 
             
         });
     }
 
+    // Close all windows on main window close implementation
+    ui.window().on_close_requested(move || {
+        println!("window closed requested");
+        if *open_window_count.borrow() > 0 {
+            println!("windows still open, so keeping app open");
+            slint::CloseRequestResponse::KeepWindowShown
+        } else {
+            println!("closing all windows");
+            slint::CloseRequestResponse::HideWindow
+        }
+        
+    });
 
     ui.run().unwrap();
     Ok(())
