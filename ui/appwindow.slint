@@ -43,7 +43,8 @@ component HomeScreen {
     in-out property <string> price_code;
     in-out property <bool> task_running;
 
-    in-out property <[string]> project_names_model: ["Project 1", "Project 2", "Project 3"];
+    // in-out property <[string]> project_names_model: ["Project 1", "Project 2", "Project 3"];
+    in-out property <[string]> project_names_model;
     in-out property <[string]> price_codes_model: ["Price code 1", "Price code 2", "Price code 3"];
     
     callback task_name_changed();
@@ -73,7 +74,6 @@ component HomeScreen {
                 }
             }
             // add custom project
-            
             Button {
                 text: "+";
                 clicked => {
@@ -164,6 +164,7 @@ export component AppWindow inherits Window {
         Tab { 
             title: "Home";
             HomeScreen {
+                project_names_model : root.parent_project_names_model;
                 task_name_changed => {
                     root.task_name = self.task_name;
                     parent_task_name_changed();
@@ -184,8 +185,8 @@ export component AppWindow inherits Window {
                     parent_initialise_custom_project_name_popup();
                 }
                 new_custom_name_added => {
-                    self.project_names_model = root.parent_project_names_model;
-                    self.price_codes_model = root.parent_price_codes_model;
+                    
+                    
                 }
 
             }

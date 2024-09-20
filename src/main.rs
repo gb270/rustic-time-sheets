@@ -9,6 +9,7 @@ use std::rc::Rc;
 use csv::Writer;
 use chrono::{DateTime, Utc};
 use slint::SharedString;
+use slint::{ModelRc, VecModel};
 
 slint::include_modules!();
 
@@ -34,31 +35,24 @@ fn format_datetime(datetime: DateTime<Utc>) -> SharedString {
 }
 
 
-fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>) -> Result<(), Box<dyn Error>> {
-    println!("initialized!");
+fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>, parent_project_names_model : Rc<VecModel<SharedString>> ) -> Result<(), Box<dyn Error>> {
     let popup = CustomProjectNameDialog::new()?;
     let popup_weak = popup.as_weak();
-    
+
     {
         let popup_weak_clone = popup_weak.clone();
         let ui_weak_clone = ui_weak.clone();
-        
+
         popup.on_confirm_close_dialog(move || {
             if let (Some(popup), Some(ui)) = (popup_weak_clone.upgrade(), ui_weak_clone.upgrade()) {
                 let new_custom_project_name = popup.get_new_custom_project_name();
-                println!("New project name is {}", new_custom_project_name);
-                println!("Project name saved");
-                
-
-                println!("current model is {:?}", ui.get_parent_project_names_model());
-                
-                // TODO: implement adding to model
+                parent_project_names_model.push(new_custom_project_name.into());
 
                 popup.window().hide().unwrap();
             }
         });
     }
-    
+
     {
         let popup_weak_clone = popup_weak.clone();
         popup.on_cancel_close_dialog(move || {
@@ -68,7 +62,7 @@ fn custom_project_name_dialog(ui_weak: slint::Weak<AppWindow>) -> Result<(), Box
             }
         });
     }
-    
+
     popup.run()?;
     Ok(())
 }
@@ -139,8 +133,21 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         });
 
+    }
+
+    let parent_project_names_model : Rc<VecModel<SharedString>> =
+    Rc::new(VecModel::from(vec!["Project 1".into(), "Project 2".into(), "Project 3".into()]));
+    let parent_project_names_model_rc = ModelRc::from(parent_project_names_model.clone());
+    ui.set_parent_project_names_model(parent_project_names_model_rc);
+    {
+        let ui_weak_clone = ui_weak.clone();
+
         ui.on_parent_initialise_custom_project_name_popup(move || {
-            let _ = custom_project_name_dialog(ui_weak.clone());
+            let parent_project_names_model_clone = parent_project_names_model.clone();
+            let _ = custom_project_name_dialog(ui_weak_clone.clone(), parent_project_names_model_clone);
+            // parent_project_names_model.push("Somevalue".into());
+
+            
         });
     }
 
